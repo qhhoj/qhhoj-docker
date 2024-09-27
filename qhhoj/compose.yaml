@@ -1,0 +1,139 @@
+#defining docker service
+services:
+  base:
+    build: 
+      context: .
+      dockerfile: ./base/Dockerfile
+    image: qhhoj/qhhoj-base
+    network_mode: none
+
+  database:
+    container_name: qhhoj-sql
+    image: mysql:latest
+    restart: unless-stopped
+    volumes:
+      - ./database/:/var/lib/mysql/
+    env_file: [env/mysql.env, env/mysql-admin.env]
+    environment:
+      - net_read_timeout=500
+      - connect_timeout=43200
+    networks: [database]
+  
+  redis:
+    container_name: qhhoj-redis
+    image: redis:alpine
+    restart: unless-stopped
+    networks: [site]
+
+  celery:
+    container_name: qhhoj-celery
+    build:
+      context: .
+      dockerfile: ./celery/Dockerfile
+    image: qhhoj/qhhoj-celery
+    init: true
+    restart: unless-stopped
+    volumes:
+      - pdfcache:/pdfcache/
+      - ./repo:/site/
+    working_dir: /site/
+    env_file: [env/mysql.env, env/site.env]
+    networks: [site, database]
+    depends_on: [base, database, redis]
+
+  bridged:
+    build:
+      context: .
+      dockerfile: ./bridged/Dockerfile
+    container_name: qhhoj-bridged
+    image: qhhoj/qhhoj-bridged
+    init: true
+    restart: unless-stopped
+    volumes:
+      - pdfcache:/pdfcache/
+      - ./problems/:/problems/
+      - ./repo/:/site/
+    working_dir: /site/
+    env_file: [env/mysql.env, env/site.env]
+    networks: [site, nginx, database]
+    depends_on: [base, database, redis]
+    ports:
+      - 9999:9999
+      - 9998:9998
+
+  wsevent:
+    build:
+      context: .
+      dockerfile: ./wsevent/Dockerfile
+    container_name: qhhoj-wsevent
+    image: qhhoj/qhhoj-wsevent
+    init: true
+    restart: unless-stopped
+    volumes:
+      - ./repo/:/app/site/
+    working_dir: /app/site/
+    env_file: [env/mysql.env, env/site.env]
+    networks: [site, nginx]
+
+  site:
+    build:
+      context: .
+      dockerfile: ./site/Dockerfile
+    container_name: qhhoj-site
+    image: qhhoj/qhhoj-site
+    init: true
+    restart: unless-stopped
+    volumes:
+      - assets:/assets/
+      - pdfcache:/pdfcache/
+      - userdatacache:/userdatacache/
+      - contestdatacache:/contestdatacache/
+      - cache:/cache/
+      - ./media/:/media/
+      - ./problems/:/problems/
+      - ./repo/:/site/
+    working_dir: /site/
+    env_file: [env/mysql.env, env/site.env]
+    networks: [site, nginx, database]
+    depends_on: [base, database, redis]
+
+  nginx:
+    container_name: qhhoj-nginx
+    image: nginx:alpine
+    restart: always
+    ports:
+      - 80:80
+    volumes:
+      - assets:/assets/
+      - pdfcache:/pdfcache/
+      - userdatacache:/userdatacache/
+      - contestdatacache:/contestdatacache/
+      - cache:/cache/
+      - ./media/:/media/
+      - ./nginx/conf.d/:/etc/nginx/conf.d/
+    networks: [nginx]
+    depends_on: [site, wsevent]
+
+  pdfoid:
+    build:
+      context: .
+      dockerfile: ./pdfoid/Dockerfile
+    container_name: qhhoj-pdfoid
+    image: qhhoj/qhhoj-pdfoid
+    init: true
+    restart: unless-stopped
+    networks: [site]
+    cap_add:
+      - SYS_ADMIN
+
+volumes:
+  assets:
+  userdatacache:
+  contestdatacache:
+  pdfcache:
+  cache:
+
+networks:
+  database:
+  site:
+  nginx:

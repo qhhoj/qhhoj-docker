@@ -1,0 +1,5 @@
+*.env
+qhhoj/database
+qhhoj/problems
+qhhoj/media
+qhhoj/nginx/conf.d/nginx.conf

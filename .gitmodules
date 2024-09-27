@@ -1,0 +1,3 @@
+[submodule "qhhoj/repo"]
+	path = qhhoj/repo
+	url = https://github.com/qhhoj/online-judge.git
