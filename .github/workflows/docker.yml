@@ -26,7 +26,7 @@ jobs:
           sleep 10
           COMPOSE_EXEC_FLAGS="-T" ./scripts/collectstatic
           COMPOSE_EXEC_FLAGS="-T" ./scripts/migrate
-          COMPOSE_EXEC_FLAGS="-T" ./scripts/manage.py loaddata language_small
+          COMPOSE_EXEC_FLAGS="-T" ./scripts/manage loaddata language_small
         working-directory: qhhoj
       - name: Push images to Docker
         if: (github.event_name == 'push' || github.event_name == 'schedule') && github.ref == 'refs/heads/master'
