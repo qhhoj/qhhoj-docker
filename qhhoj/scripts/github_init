@@ -1,0 +1,12 @@
+#!/bin/bash
+cd $(dirname $(dirname $0)) || exit
+
+mkdir problems media database
+
+mv config/config.js repo/websocket/
+mv config/local_settings.py repo/dmoj/
+mv config/uwsgi.ini repo/
+mv env/mysql-admin.env.example env/mysql-admin.env
+mv env/mysql.env.example env/mysql.env
+mv env/site.env.example env/site.env
+mv nginx/conf.d/nginx.conf.example nginx/conf.d/nginx.conf
