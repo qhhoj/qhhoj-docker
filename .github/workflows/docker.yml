@@ -21,7 +21,7 @@ jobs:
         working-directory: qhhoj
       - name: Test images
         run: |
-          ./scripts/initialize
+          ./scripts/init
           docker compose up -d
           sleep 10
           COMPOSE_EXEC_FLAGS="-T" ./scripts/copy_static
