@@ -20,5 +20,5 @@ RUN pip3 install -r requirements.txt && \
 
 RUN rm -rf requirements.txt additional_requirements.txt
 RUN pip install setuptools
-
+RUN pip install legacy-cgi
 RUN npm install -g sass postcss-cli postcss autoprefixer
